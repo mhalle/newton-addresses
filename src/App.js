@@ -6,8 +6,6 @@ import { StaticMap } from 'react-map-gl';
 import { Layout, Checkbox } from 'antd';
 import useSWR from "swr";
 import 'antd/dist/antd.css';
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import mapboxgl from '!mapbox-gl';  // eslint-disable-line  no-unused-vars
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './App.css'
 
