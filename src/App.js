@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
-
 import { ScatterplotLayer, GeoJsonLayer } from '@deck.gl/layers';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { StaticMap } from 'react-map-gl';
 import { Layout, Checkbox } from 'antd';
 import useSWR from "swr";
 import 'antd/dist/antd.css';
+
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import './App.css'
+
+import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'mapbox-gl';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+mapboxgl.workerClass = require('worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker').default;
 
 const DataURLs = [
   'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Addresses/Addresses.geojson',
@@ -151,7 +156,7 @@ function App() {
             defaultValue={selectedAddressTypes}
             onChange={setSelectedAddressTypes}
           />
-          <div class="credit">
+          <div className="credit">
             Data courtesy <a href="https://github.com/NewtonMAGIS/GISData">Newton GIS via Github</a>.
           </div>
         </div>
