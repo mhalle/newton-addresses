@@ -6,15 +6,10 @@ import { StaticMap } from 'react-map-gl';
 import { Layout, Checkbox } from 'antd';
 import useSWR from "swr";
 import 'antd/dist/antd.css';
-
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-import './App.css'
-
-import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
 // eslint-disable-next-line import/no-webpack-loader-syntax
-mapboxgl.workerClass = require('worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker').default;
+import mapboxgl from '!mapbox-gl';  // eslint-disable-line  no-unused-vars
+import 'mapbox-gl/dist/mapbox-gl.css';
+import './App.css'
 
 const DataURLs = [
   'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Addresses/Addresses.geojson',
