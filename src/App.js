@@ -17,6 +17,15 @@ const DataURLs = [
 ];
 
 const DisplayOptions = ['Parks', 'Water', 'Village centers'];
+const IncludeAddressTypes = [
+  'Apartment', 
+  'Commercial', 
+  'Historic',
+  'Institution',
+  'Mixed',
+  'OpenSpace',
+  'Residential'
+];
 
 const { Header, Content, Sider } = Layout;
 
@@ -40,11 +49,6 @@ function App() {
   const [selectedToDisplay, setSelectedToDisplay] = useState(DisplayOptions);
 
   const { data } = useSWR([DataURLs, 'data'], fetchAll, { revalidateOnFocus: false });
-
-  const addressTypes = data ? data[0].map(x => x.properties.AddressType)
-    .filter(onlyUnique)
-    .filter(x => (x !== 'Misspelled'))
-    .sort() : [];
 
   useEffect(() => {
     if(data){
@@ -145,7 +149,7 @@ function App() {
           <h2>Address Types</h2>
           <Checkbox.Group
             className="address-types"
-            options={addressTypes}
+            options={IncludeAddressTypes}
             defaultValue={selectedAddressTypes}
             onChange={setSelectedAddressTypes}
           />
@@ -174,10 +178,6 @@ function App() {
 
 
   );
-}
-
-function onlyUnique(value, index, self) {
-  return self.indexOf(value) === index;
 }
 
 function fetcher(url) {
