@@ -46,7 +46,7 @@ function App() {
 
   const [selectedAddressTypes, setSelectedAddressTypes] = useState(['Apartment', 'Mixed', 'Residential']);
   const [filteredAddresses, setFilteredAddresses] = useState([]);
-  const [selectedToDisplay, setSelectedToDisplay] = useState(DisplayOptions);
+  const [selectedToDisplay, setSelectedToDisplay] = useState([]);
 
   const { data } = useSWR([DataURLs, 'data'], fetchAll, { revalidateOnFocus: false });
 
