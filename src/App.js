@@ -16,7 +16,7 @@ const DataURLs = [
   'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Surface%20Waters/SurfaceWater.geojson'
 ];
 
-const DisplayOptions = ['Parks', 'Water', 'Village centers'];
+const DisplayOptions = ['Open Space', 'Water', 'Village centers'];
 const IncludeAddressTypes = [
   'Apartment', 
   'Commercial', 
@@ -88,7 +88,7 @@ function App() {
 
   const parksLayer = new GeoJsonLayer({
     id: 'parks-layer',
-    visible: selectedToDisplay.includes('Parks'),
+    visible: selectedToDisplay.includes('Open Space'),
     data: data ? data[2] : [],
     pickable: false,
     stroked: false,
