@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, GeoJsonLayer } from '@deck.gl/layers';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
-import { StaticMap } from 'react-map-gl';
 import { Layout, Checkbox } from 'antd';
+import { useQueryParam, ArrayParam } from 'use-query-params';
+
+import MapVis from './MapVis';
 import useSWR from "swr";
 import 'antd/dist/antd.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -18,8 +19,8 @@ const DataURLs = [
 
 const DisplayOptions = ['Open Space', 'Water', 'Village centers'];
 const IncludeAddressTypes = [
-  'Apartment', 
-  'Commercial', 
+  'Apartment',
+  'Commercial',
   'Historic',
   'Institution',
   'Mixed',
@@ -28,7 +29,8 @@ const IncludeAddressTypes = [
 ];
 
 const { Header, Content, Sider } = Layout;
-
+const DefaultAddressTypes = ['Apartment', 'Mixed', 'Residential'];
+const DefaultToDisplay = [];
 // Set your mapbox access token here
 const MAPBOX_ACCESS_TOKEN =
   'pk.eyJ1IjoiaGFsYXphciIsImEiOiJja2N0dXI2Y3kxbTBoMnBxcTJnaTl3czVxIn0.MXzwZHuwNaOPKZgO17_YmA';
@@ -44,23 +46,40 @@ const INITIAL_VIEW_STATE = {
 
 function App() {
 
-  const [selectedAddressTypes, setSelectedAddressTypes] = useState(['Apartment', 'Mixed', 'Residential']);
   const [filteredAddresses, setFilteredAddresses] = useState([]);
-  const [selectedToDisplay, setSelectedToDisplay] = useState([]);
+  const [selectedAddressTypes, setSelectedAddressTypes] = useQueryParam('atype', ArrayParam);
+  const [selectedToDisplay, setSelectedToDisplay] = useQueryParam('disp', ArrayParam);
+  const [viewState, setViewState] = useState(null);
 
-  const { data } = useSWR([DataURLs, 'data'], fetchAll, { revalidateOnFocus: false });
+  const { data } = useSWR([DataURLs, 'data'], 
+                          fetchAll, 
+                          { 
+                            revalidateOnFocus: false 
+                          });
 
   useEffect(() => {
-    if(data){
-    setFilteredAddresses(data[0].filter(x => 
-        selectedAddressTypes.includes(x.properties.AddressType)));
+    if(selectedAddressTypes === undefined){
+      setSelectedAddressTypes(DefaultAddressTypes);
+    }
+  }, [selectedAddressTypes, setSelectedAddressTypes]); 
+
+  useEffect(() => {
+    if(selectedToDisplay === undefined){
+      setSelectedToDisplay(DefaultToDisplay);
+    }
+  }, [selectedToDisplay, setSelectedToDisplay]);
+
+
+  useEffect(() => {
+    if (data) {
+      setFilteredAddresses(data[0].filter(x =>
+        selectedAddressTypes && selectedAddressTypes.includes(x.properties.AddressType)));
     }
   }, [selectedAddressTypes, data]);
 
-
   const villageCenters = new ScatterplotLayer({
     id: 'villageCenters',
-    visible: selectedToDisplay.includes('Village centers'),
+    visible: selectedToDisplay && selectedToDisplay.includes('Village centers'),
     data: data ? data[1] : null,
     opacity: 1,
     radiusUnits: 'pixels',
@@ -88,92 +107,77 @@ function App() {
 
   const parksLayer = new GeoJsonLayer({
     id: 'parks-layer',
-    visible: selectedToDisplay.includes('Open Space'),
+    visible: selectedToDisplay && selectedToDisplay.includes('Open Space'),
     data: data ? data[2] : [],
     pickable: false,
     stroked: false,
     filled: true,
     extruded: false,
-    lineWidthScale: 20,
-    lineWidthMinPixels: 2,
-    getFillColor: [50, 255, 50, 60],
-    getLineColor: [0, 0, 0],
-    getRadius: 10,
-    getLineWidth: 1,
-    getElevation: 30
+    getFillColor: [50, 255, 50, 60]
   });
 
   const waterLayer = new GeoJsonLayer({
     id: 'water-layer',
-    visible: selectedToDisplay.includes('Water'),
+    visible: selectedToDisplay && selectedToDisplay.includes('Water'),
     data: data ? data[3] : [],
     pickable: false,
     stroked: false,
     filled: true,
     extruded: false,
-    lineWidthScale: 20,
-    lineWidthMinPixels: 2,
-    getFillColor: [10, 10, 230, 60],
-    getLineColor: [0, 0, 0],
-    getRadius: 10,
-    getLineWidth: 1,
-    getElevation: 30
-  });
+    getFillColor: [10, 10, 230, 60]
+    });
 
   const layers = [addressLayer, villageCenters, parksLayer, waterLayer];
 
   return (
     <Layout style={{}}>
-        <Header style={{  height: "64px", paddingLeft: '10px', backgroundColor: "white" }} >
-          <h1>Newton address heat map</h1>
-        </Header>
-        <Layout>
-      <Sider
-        width={230}
-        style={{
-          overflow: 'auto',
-          height: '100vh',
-          position: 'fixed',
-          backgroundColor: 'white',
-          left: 0,
-        }}
-      >
-        <div className="side-content">
-        <h2>Display</h2>
-          <Checkbox.Group
-            className="display"
-            options={DisplayOptions}
-            defaultValue={selectedToDisplay}
-            onChange={setSelectedToDisplay}
-          />
-          <h2>Address Types</h2>
-          <Checkbox.Group
-            className="address-types"
-            options={IncludeAddressTypes}
-            defaultValue={selectedAddressTypes}
-            onChange={setSelectedAddressTypes}
-          />
-          <div className="credit">
-            Data courtesy <a href="https://github.com/NewtonMAGIS/GISData">Newton GIS via Github</a>.
+      <Header style={{ height: "64px", paddingLeft: '10px', backgroundColor: "white" }} >
+        <h1>Newton address heat map</h1>
+      </Header>
+      <Layout>
+        <Sider
+          width={230}
+          style={{
+            overflow: 'auto',
+            height: '100vh',
+            position: 'fixed',
+            backgroundColor: 'white',
+            left: 0,
+          }}
+        >
+          <div className="side-content">
+            <h2>Display</h2>
+            <Checkbox.Group
+              className="display"
+              value={selectedToDisplay}
+              options={DisplayOptions}
+              onChange={setSelectedToDisplay}
+            />
+            <h2>Address Types</h2>
+            <Checkbox.Group
+              className="address-types"
+              value={selectedAddressTypes}
+              options={IncludeAddressTypes}
+              onChange={setSelectedAddressTypes}
+            />
+            <div className="credit">
+              Data courtesy <a href="https://github.com/NewtonMAGIS/GISData">Newton GIS via Github</a>.
+            </div>
           </div>
-        </div>
 
-      </Sider >
-      <Layout className="site-layout" style={{ height: '100%', marginLeft: 230 }}>
-
-        <Content style={{ height: "91vh", position: "relative" }}>
-          <DeckGL
-            initialViewState={INITIAL_VIEW_STATE}
-            controller={true}
-            layers={layers}
-          >
-            <StaticMap
+        </Sider >
+        <Layout className="site-layout" style={{ height: '100%', marginLeft: 230 }}>
+          <Content style={{ height: "91vh", position: "relative" }}>
+            <MapVis initialViewState={INITIAL_VIEW_STATE}
+              layers={layers}
               mapStyle='mapbox://styles/mapbox/dark-v10'
-              mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
-          </DeckGL>
-        </Content>
-      </Layout>
-    </Layout >
+              mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
+              onViewStateChange={x => setViewState(x.viewState)}
+              viewState={viewState ? viewState : INITIAL_VIEW_STATE}
+            />
+          </Content>
+        </Layout>
+      </Layout >
     </Layout>
 
 
@@ -191,5 +195,6 @@ function fetcher(url) {
 function fetchAll(urls) {
   return Promise.all(urls.map(fetcher));
 }
+
 
 export default App
