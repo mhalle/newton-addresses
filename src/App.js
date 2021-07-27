@@ -52,7 +52,7 @@ function App() {
   const [viewState, setViewState] = useState(null);
 
   const { data } = useSWR([DataURLs, 'data'], 
-                          x => fetchMany(x, fetcher), 
+                          fetchMany, 
                           { 
                             revalidateOnFocus: false 
                           });
@@ -192,10 +192,10 @@ function fetcher(url) {
     });
 }
 
-function fetchMany(o, fetcher) {
+function fetchMany(o) {
   const ret = {};
-  const keys = Object.keys(o).toArray();
-  return Promise.all(fetcher(Object.values(o))).then(x => {
+  const keys = Object.keys(o);
+  return Promise.all(Object.values(o).map(u => fetcher(u))).then(x => {
     x.forEach((e, i) => { 
       ret[keys[i]] = e;
     });
