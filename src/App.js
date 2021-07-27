@@ -10,12 +10,12 @@ import 'antd/dist/antd.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './App.css'
 
-const DataURLs = [
-  'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Addresses/Addresses.geojson',
-  'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Villages/Villages.geojson',
-  'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Open%20Space/OpenSpace.geojson',
-  'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Surface%20Waters/SurfaceWater.geojson'
-];
+const DataURLs = {
+  addresses: 'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Addresses/Addresses.geojson',
+  villageCenters: 'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Villages/Villages.geojson',
+  openSpace: 'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Open%20Space/OpenSpace.geojson',
+  water: 'https://raw.githubusercontent.com/NewtonMAGIS/GISData/master/Surface%20Waters/SurfaceWater.geojson'
+};
 
 const DisplayOptions = ['Open Space', 'Water', 'Village centers'];
 const IncludeAddressTypes = [
@@ -52,7 +52,7 @@ function App() {
   const [viewState, setViewState] = useState(null);
 
   const { data } = useSWR([DataURLs, 'data'], 
-                          fetchAll, 
+                          x => fetchMany(x, fetcher), 
                           { 
                             revalidateOnFocus: false 
                           });
@@ -72,7 +72,7 @@ function App() {
 
   useEffect(() => {
     if (data) {
-      setFilteredAddresses(data[0].filter(x =>
+      setFilteredAddresses(data.addresses.filter(x =>
         selectedAddressTypes && selectedAddressTypes.includes(x.properties.AddressType)));
     }
   }, [selectedAddressTypes, data]);
@@ -80,7 +80,7 @@ function App() {
   const villageCenters = new ScatterplotLayer({
     id: 'villageCenters',
     visible: selectedToDisplay && selectedToDisplay.includes('Village centers'),
-    data: data ? data[1] : null,
+    data: data ? data.villageCenters : null,
     opacity: 1,
     radiusUnits: 'pixels',
     lineWidthUnits: 'pixels',
@@ -108,7 +108,7 @@ function App() {
   const parksLayer = new GeoJsonLayer({
     id: 'parks-layer',
     visible: selectedToDisplay && selectedToDisplay.includes('Open Space'),
-    data: data ? data[2] : [],
+    data: data ? data.openSpace : [],
     pickable: false,
     stroked: false,
     filled: true,
@@ -119,7 +119,7 @@ function App() {
   const waterLayer = new GeoJsonLayer({
     id: 'water-layer',
     visible: selectedToDisplay && selectedToDisplay.includes('Water'),
-    data: data ? data[3] : [],
+    data: data ? data.water : [],
     pickable: false,
     stroked: false,
     filled: true,
@@ -192,9 +192,15 @@ function fetcher(url) {
     });
 }
 
-function fetchAll(urls) {
-  return Promise.all(urls.map(fetcher));
+function fetchMany(o, fetcher) {
+  const ret = {};
+  const keys = Object.keys(o).toArray();
+  return Promise.all(fetcher(Object.values(o))).then(x => {
+    x.forEach((e, i) => { 
+      ret[keys[i]] = e;
+    });
+    return ret;
+  });
 }
-
 
 export default App
